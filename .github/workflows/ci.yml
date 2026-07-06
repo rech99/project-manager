@@ -38,13 +38,17 @@ jobs:
 
       - name: Lint with Ruff
         run: |
-          # stop the build if there are Python syntax errors or undefined names
           ruff check .
 
       - name: Run Django Tests
+        env:
+          SECRET_KEY: 'django-insecure-ci-test-key-github-actions-planflow'
+          DEBUG: 'True'
+          ALLOWED_HOSTS: 'localhost,127.0.0.1'
+          CORS_ALLOW_ALL_ORIGINS: 'True'
+          DATABASE_URL: 'sqlite:///db.sqlite3'
         run: |
-          # We use sqlite by default as specified in our architecture
-          python manage.py test --noinput || echo "No manage.py found yet or tests failed (expected before code is written)"
+          python manage.py test --noinput
 
   frontend-ci:
     name: Frontend CI (React + TS)
@@ -74,8 +78,8 @@ jobs:
 
       - name: Lint and Code Formatting
         run: |
-          npm run lint || echo "No lint script or lints failed"
+          npm run lint
 
       - name: Build Application
         run: |
-          npm run build || echo "No build script or build failed"
+          npm run build
