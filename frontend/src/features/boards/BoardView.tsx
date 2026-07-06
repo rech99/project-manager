@@ -73,7 +73,7 @@ interface BoardViewProps {
 }
 
 export const BoardView: React.FC<BoardViewProps> = ({ onSelectTask, onToggleCharts, showCharts }) => {
-  const { activeProject, activeBoard, updateTaskInBoard, addTaskToColumn } = useBoardStore();
+  const { activeProject, activeBoard, updateTaskInBoard, addTaskToColumn, moveTaskLocal } = useBoardStore();
   const { token, user } = useAuthStore();
   const { connectBoard, disconnectBoard, sendTaskMove, isConnected, collaborators } = useWebSocketStore();
   
@@ -134,9 +134,14 @@ export const BoardView: React.FC<BoardViewProps> = ({ onSelectTask, onToggleChar
       if (!targetCol) return;
 
       // Find the drop location inside target column
-      // To keep it simple, we put it at the end of the column:
       const lastTask = targetCol.tasks[targetCol.tasks.length - 1] || null;
       const newRank = calculateRankBetween(lastTask ? lastTask.rank_order : null, null);
+
+      // Save a copy of the current board for optimistic rollback on failure
+      const originalBoardState = JSON.parse(JSON.stringify(activeBoard));
+
+      // Optimistic update (move instantly in UI)
+      moveTaskLocal(taskId, sourceColId, targetColId, newRank);
 
       // Perform move via WebSockets (which broadcasts to all users and updates local state)
       if (isConnected) {
@@ -149,7 +154,12 @@ export const BoardView: React.FC<BoardViewProps> = ({ onSelectTask, onToggleChar
           next_task_rank: null
         }).then((res) => {
           updateTaskInBoard(res.data);
-        }).catch(err => console.error("REST move fallback failed:", err));
+        }).catch(err => {
+          console.error("REST move fallback failed, rolling back:", err);
+          // Rollback to original state on error
+          useBoardStore.setState({ activeBoard: originalBoardState });
+          alert("Move task failed. Column WIP limit may be exceeded or you don't have edit permissions.");
+        });
       }
     } catch (err) {
       console.error("Drop failed:", err);

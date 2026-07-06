@@ -11,7 +11,7 @@ import {
   Tooltip, 
   Legend 
 } from 'recharts';
-import { Calendar, Target, Award } from 'lucide-react';
+import { Calendar, Target, Award, Download } from 'lucide-react';
 
 interface Sprint {
   id: string;
@@ -71,6 +71,43 @@ export const SprintsView: React.FC = () => {
     }
   };
 
+  const handleExportCSV = async () => {
+    if (!activeSprint) return;
+    try {
+      const response = await api.get(`tasks/?sprint=${activeSprint.id}`);
+      const tasks = response.data;
+      
+      // Convert to CSV
+      const headers = ['Key', 'Title', 'Type', 'Priority', 'Story Points', 'Status', 'Assignee', 'Created At'];
+      const rows = tasks.map((t: any) => [
+        t.key,
+        `"${t.title.replace(/"/g, '""')}"`,
+        t.task_type,
+        t.priority,
+        t.story_points ?? 'None',
+        t.column_name || t.column?.name || 'Unknown',
+        t.assignee ? (t.assignee.first_name ? `${t.assignee.first_name} ${t.assignee.last_name}` : t.assignee.username) : 'Unassigned',
+        new Date(t.created_at).toLocaleDateString()
+      ]);
+      
+      const csvContent = [headers.join(','), ...rows.map((r: any) => r.join(','))].join('\n');
+      
+      // Trigger download
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', `Sprint_Report_${activeSprint.name.replace(/\s+/g, '_')}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (err) {
+      console.error("Export CSV failed:", err);
+      alert("Failed to export sprint data to CSV.");
+    }
+  };
+
   if (!activeProject) return null;
 
   return (
@@ -78,10 +115,22 @@ export const SprintsView: React.FC = () => {
       
       {/* Sprints Overview */}
       <div className="card">
-        <h3 style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Target size={18} color="var(--primary)" />
-          Sprint Metrics & Active Goal
-        </h3>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+          <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Target size={18} color="var(--primary)" />
+            Sprint Metrics & Active Goal
+          </h3>
+          {activeSprint && (
+            <button 
+              onClick={handleExportCSV}
+              className="btn-text"
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '13px', padding: '6px 12px', background: 'var(--border-subtle)', borderRadius: '4px', border: 'none', cursor: 'pointer', color: 'var(--text-primary)' }}
+            >
+              <Download size={14} />
+              Export CSV Report
+            </button>
+          )}
+        </div>
         
         {activeSprint ? (
           <div>

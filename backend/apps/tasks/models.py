@@ -80,6 +80,13 @@ class Task(models.Model):
                 old_sp = old_task.sprint.name if old_task.sprint else 'None'
                 new_sp = self.sprint.name if self.sprint else 'None'
                 changes.append(('sprint', old_sp, new_sp))
+            if old_task.title != self.title:
+                changes.append(('title', old_task.title, self.title))
+            if old_task.description != self.description:
+                # Limit length in history log to prevent database bloating
+                old_desc = (old_task.description[:50] + '...') if old_task.description else 'None'
+                new_desc = (self.description[:50] + '...') if self.description else 'None'
+                changes.append(('description', old_desc, new_desc))
                 
             for field, old_val, new_val in changes:
                 user = getattr(self, '_current_user', None)
