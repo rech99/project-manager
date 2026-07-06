@@ -10,7 +10,11 @@ class BoardViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         # Only return boards of projects the user is a member of
-        return Board.objects.filter(project__members__user=self.request.user).distinct()
+        queryset = Board.objects.filter(project__members__user=self.request.user).distinct()
+        project_id = self.request.query_params.get('project')
+        if project_id:
+            queryset = queryset.filter(project_id=project_id)
+        return queryset
 
     def perform_create(self, serializer):
         # We need project from request data
