@@ -34,4 +34,24 @@ class ProjectSerializer(serializers.ModelSerializer):
         project = super().create(validated_data)
         user = self.context['request'].user
         ProjectMember.objects.create(project=project, user=user, role='ADMIN')
+        
+        # Auto-create default Board and Columns for the new project
+        from apps.boards.models import Board, Column
+        board = Board.objects.create(
+            project=project,
+            name=f"Board - {project.name}",
+            description=f"Default board for project {project.name}"
+        )
+        
+        # Setup columns depending on project type
+        if project.project_type == 'KANBAN':
+            Column.objects.create(board=board, name='Backlog', rank_order='a')
+            Column.objects.create(board=board, name='To Do', rank_order='b')
+            Column.objects.create(board=board, name='In Progress', rank_order='c')
+            Column.objects.create(board=board, name='Done', rank_order='d')
+        else: # SCRUM
+            Column.objects.create(board=board, name='To Do', rank_order='a')
+            Column.objects.create(board=board, name='In Progress', rank_order='b')
+            Column.objects.create(board=board, name='Done', rank_order='c')
+            
         return project
