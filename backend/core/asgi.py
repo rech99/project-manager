@@ -12,6 +12,6 @@ import django
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'core.settings')
 django.setup()
 
-from core.routing import application
+from core.routing import application  # noqa: F401, E402
 
 

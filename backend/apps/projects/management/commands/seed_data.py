@@ -109,7 +109,7 @@ class Command(BaseCommand):
         c_backlog = Column.objects.create(board=board, name='Backlog', rank_order='a')
         c_todo = Column.objects.create(board=board, name='To Do', rank_order='b')
         c_progress = Column.objects.create(board=board, name='In Progress', rank_order='c')
-        c_review = Column.objects.create(board=board, name='Code Review', rank_order='d')
+        Column.objects.create(board=board, name='Code Review', rank_order='d')
         c_done = Column.objects.create(board=board, name='Done', rank_order='e')
 
         # 5. Sprints
@@ -190,7 +190,7 @@ class Command(BaseCommand):
         Comment.objects.create(task=t3, user=self.users['sarah_dev'], content='Yes, I\'m throttling updates using a custom requestAnimationFrame loop.')
 
         # Subtasks of FALC-2
-        sub1 = Task.objects.create(
+        Task.objects.create(
             project=project, board=board, column=c_progress, sprint=sprint2, parent=t3,
             key='FALC-7', title='Optimize Recharts rendering performance for high-frequency updates',
             description='Use React memoization and canvas rendering instead of SVG if telemetry stream is too intense.',
@@ -232,7 +232,7 @@ class Command(BaseCommand):
         TaskHistory.objects.create(task=t5, user=self.users['john_qa'], field_changed='column', old_value='Code Review', new_value='Done', created_at=timezone.now() - timedelta(days=2))
 
         # --- SPRINT 3 TASKS (BACKLOG/PLANNING) ---
-        t6 = Task.objects.create(
+        Task.objects.create(
             project=project, board=board, column=c_backlog, sprint=sprint3,
             key='FALC-6', title='Write API documentation for telemetry endpoints',
             description='Document URL endpoints, WebSocket connection schemas, response fields, and error codes in Swagger/OpenAPI.',
@@ -240,7 +240,7 @@ class Command(BaseCommand):
             assignee=None, reporter=self.users['alex_pm']
         )
 
-        t7 = Task.objects.create(
+        Task.objects.create(
             project=project, board=board, column=c_backlog,
             key='FALC-9', title='Research WebGL for 3D trajectory rendering',
             description='Look into Three.js or BabylonJS to render a live 3D visual track of the rocket trajectory inside a canvas card.',
@@ -271,7 +271,7 @@ class Command(BaseCommand):
         )
 
         # 4. Columns (with WIP Limits)
-        c_backlog = Column.objects.create(board=board, name='Backlog', rank_order='a')
+        Column.objects.create(board=board, name='Backlog', rank_order='a')
         c_todo = Column.objects.create(board=board, name='To Do', rank_order='b')
         c_progress = Column.objects.create(board=board, name='In Progress', wip_limit=3, rank_order='c')
         c_done = Column.objects.create(board=board, name='Done', rank_order='d')

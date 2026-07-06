@@ -205,8 +205,8 @@ else:
     }
 
 # SQLite Tuning for Portfolio Concurrency (Foreign Keys & WAL Mode)
-from django.db.backends.signals import connection_created
-from django.dispatch import receiver
+from django.db.backends.signals import connection_created  # noqa: E402
+from django.dispatch import receiver  # noqa: E402
 
 @receiver(connection_created)
 def configure_sqlite(sender, connection, **kwargs):
