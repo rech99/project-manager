@@ -45,19 +45,29 @@ class TaskViewSet(viewsets.ModelViewSet):
         project_id = self.request.data.get('project')
         project = Project.objects.get(pk=project_id)
         column_id = self.request.data.get('column')
+        board_id = self.request.data.get('board')
         
         # 1. Check if user is a viewer (Viewers cannot create tasks)
         member = ProjectMember.objects.get(project=project, user=self.request.user)
         if member.role == 'VIEWER':
             raise permissions.exceptions.PermissionDenied("Viewers cannot create tasks.")
 
-        # 2. Auto-generate sequential key: key = PROJECT_KEY + '-' + (total_tasks + 1)
-        # Note: In production we would use select_for_update() on project or similar to avoid race conditions,
-        # but for a portfolio SQLite setup, this is perfect.
+        # Resolve board and column if not explicitly sent
+        if not board_id:
+            from apps.boards.models import Board
+            board = Board.objects.filter(project=project).first()
+            board_id = board.id if board else None
+
+        if not column_id and board_id:
+            from apps.boards.models import Column
+            first_col = Column.objects.filter(board_id=board_id).order_by('rank_order').first()
+            column_id = first_col.id if first_col else None
+        
+        # 2. Auto-generate sequential key
         total_tasks = Task.objects.filter(project=project).count()
         task_key = f"{project.key}-{total_tasks + 1}"
         
-        # 3. Calculate Lexorank rank_order (put at the end of the column)
+        # 3. Calculate Lexorank rank_order (put at the end of the resolved column)
         last_task = Task.objects.filter(column_id=column_id, deleted_at__isnull=True).order_by('rank_order').last()
         prev_rank = last_task.rank_order if last_task else None
         rank = lexorank_between(prev_rank, None)
@@ -65,6 +75,8 @@ class TaskViewSet(viewsets.ModelViewSet):
         # 4. Save reporter as current user, and set current user for history logs
         task = serializer.save(
             key=task_key,
+            column_id=column_id,
+            board_id=board_id,
             rank_order=rank,
             reporter=self.request.user
         )

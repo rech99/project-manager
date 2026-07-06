@@ -80,6 +80,10 @@ export const BoardView: React.FC<BoardViewProps> = ({ onSelectTask, onToggleChar
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [newTaskType, setNewTaskType] = useState<'STORY' | 'TASK' | 'BUG'>('TASK');
+  const [newTaskDescription, setNewTaskDescription] = useState('');
+  const [newTaskPriority, setNewTaskPriority] = useState<'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL'>('MEDIUM');
+  const [newTaskStoryPoints, setNewTaskStoryPoints] = useState('');
+  const [newTaskAssignee, setNewTaskAssignee] = useState('');
   const [targetColumnId, setTargetColumnId] = useState('');
   
   // Track dragging locally
@@ -154,19 +158,32 @@ export const BoardView: React.FC<BoardViewProps> = ({ onSelectTask, onToggleChar
 
   const handleCreateTask = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newTaskTitle || !targetColumnId) return;
+    if (!newTaskTitle) return;
+
+    // Force tasks to start in the first column of the board (e.g. Backlog or To Do)
+    const firstColumn = activeBoard?.columns?.[0];
+    const columnToUse = firstColumn ? firstColumn.id : targetColumnId;
 
     try {
       const response = await api.post('tasks/', {
-        project: activeProject.id,
-        board: activeBoard.id,
-        column: targetColumnId,
+        project: activeProject?.id,
+        board: activeBoard?.id,
+        column: columnToUse,
         title: newTaskTitle,
         task_type: newTaskType,
+        description: newTaskDescription,
+        priority: newTaskPriority,
+        story_points: newTaskStoryPoints ? parseInt(newTaskStoryPoints) : null,
+        assignee_id: newTaskAssignee || null,
       });
 
       addTaskToColumn(response.data);
       setNewTaskTitle('');
+      setNewTaskType('TASK');
+      setNewTaskDescription('');
+      setNewTaskPriority('MEDIUM');
+      setNewTaskStoryPoints('');
+      setNewTaskAssignee('');
       setIsTaskModalOpen(false);
     } catch (err) {
       console.error("Task creation failed:", err);
@@ -404,17 +421,81 @@ export const BoardView: React.FC<BoardViewProps> = ({ onSelectTask, onToggleChar
             required
           />
 
-          <div className="form-group">
-            <label htmlFor="task-type">Task Type</label>
-            <select
-              id="task-type"
-              value={newTaskType}
-              onChange={(e) => setNewTaskType(e.target.value as any)}
-            >
-              <option value="TASK">Task (General Work)</option>
-              <option value="STORY">User Story (Feature)</option>
-              <option value="BUG">Bug (Issue)</option>
-            </select>
+          <div className="form-group" style={{ marginBottom: '16px' }}>
+            <label htmlFor="task-desc">Description</label>
+            <textarea
+              id="task-desc"
+              value={newTaskDescription}
+              onChange={(e) => setNewTaskDescription(e.target.value)}
+              placeholder="Provide a detailed description of this task..."
+              style={{
+                width: '100%',
+                backgroundColor: 'var(--bg-surface)',
+                color: 'var(--text-primary)',
+                border: '1px solid var(--border-medium)',
+                padding: '10px',
+                borderRadius: 'var(--radius-sm)',
+                minHeight: '80px'
+              }}
+            />
+          </div>
+
+          <div style={{ display: 'flex', gap: '16px', marginBottom: '16px', flexWrap: 'wrap' }}>
+            <div className="form-group" style={{ flex: '1', minWidth: '120px' }}>
+              <label htmlFor="task-type">Task Type</label>
+              <select
+                id="task-type"
+                value={newTaskType}
+                onChange={(e) => setNewTaskType(e.target.value as any)}
+              >
+                <option value="TASK">Task (General)</option>
+                <option value="STORY">User Story (Feature)</option>
+                <option value="BUG">Bug (Issue)</option>
+              </select>
+            </div>
+
+            <div className="form-group" style={{ flex: '1', minWidth: '120px' }}>
+              <label htmlFor="task-priority">Priority</label>
+              <select
+                id="task-priority"
+                value={newTaskPriority}
+                onChange={(e) => setNewTaskPriority(e.target.value as any)}
+              >
+                <option value="LOW">Low</option>
+                <option value="MEDIUM">Medium</option>
+                <option value="HIGH">High</option>
+                <option value="CRITICAL">Critical</option>
+              </select>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', gap: '16px', marginBottom: '16px', flexWrap: 'wrap' }}>
+            <div className="form-group" style={{ flex: '1', minWidth: '120px' }}>
+              <label htmlFor="task-points">Story Points</label>
+              <input
+                id="task-points"
+                type="number"
+                value={newTaskStoryPoints}
+                onChange={(e) => setNewTaskStoryPoints(e.target.value)}
+                placeholder="e.g. 5"
+              />
+            </div>
+
+            <div className="form-group" style={{ flex: '1', minWidth: '120px' }}>
+              <label htmlFor="task-assignee">Assignee</label>
+              <select
+                id="task-assignee"
+                value={newTaskAssignee}
+                onChange={(e) => setNewTaskAssignee(e.target.value)}
+              >
+                <option value="">Unassigned</option>
+                {activeProject?.members.map((m) => (
+                  <option key={m.user.id} value={m.user.id}>
+                    {m.user.first_name ? `${m.user.first_name} ${m.user.last_name}` : m.user.username}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
 
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '24px' }}>
