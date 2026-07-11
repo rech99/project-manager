@@ -166,7 +166,7 @@ export const AuthViews: React.FC = () => {
             id="auth-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            placeholder="••••••••"
+            placeholder={isLogin ? "password123" : "••••••••"}
             required
             autoComplete={isLogin ? "current-password" : "new-password"}
           />
