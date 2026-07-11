@@ -61,7 +61,7 @@ function App() {
         color: 'var(--text-secondary)'
       }}>
         <div style={{ textAlign: 'center' }}>
-          <div className="spinner" style={{ width: '40px', height: '40px', border: '3px solid var(--border-subtle)', borderTopColor: 'var(--primary)', borderRadius: '50%', animation: 'spin 1s linear infinite', marginBottom: '16px' }}></div>
+          <div className="spinner" style={{ width: '40px', height: '40px', border: '3px solid var(--border-subtle)', borderTopColor: 'var(--primary)', display: 'block', margin: '0 auto 16px auto' }}></div>
           <p style={{ fontSize: '15px' }}>Loading Workspace...</p>
         </div>
       </div>
