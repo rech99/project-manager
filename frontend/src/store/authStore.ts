@@ -11,6 +11,27 @@ export interface User {
   avatar?: string;
 }
 
+const isTokenExpired = (token: string): boolean => {
+  try {
+    const base64Url = token.split('.')[1];
+    if (!base64Url) return true;
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(
+      window.atob(base64)
+        .split('')
+        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    );
+    const decoded = JSON.parse(jsonPayload);
+    if (!decoded || !decoded.exp) {
+      return true;
+    }
+    return decoded.exp < Date.now() / 1000;
+  } catch {
+    return true;
+  }
+};
+
 interface AuthState {
   user: User | null;
   token: string | null;
@@ -26,7 +47,14 @@ interface AuthState {
 
 export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
-  token: localStorage.getItem('auth_token'),
+  token: typeof window !== 'undefined' ? (() => {
+    const token = localStorage.getItem('auth_token');
+    if (token && isTokenExpired(token)) {
+      localStorage.removeItem('auth_token');
+      return null;
+    }
+    return token;
+  })() : null,
   isAuthenticated: false,
   isLoading: false,
   error: null,
@@ -78,6 +106,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   initializeAuth: async () => {
     const token = localStorage.getItem('auth_token');
     if (token) {
+      if (isTokenExpired(token)) {
+        get().logout();
+        return;
+      }
       set({ token, isLoading: true });
       try {
         await get().fetchProfile();

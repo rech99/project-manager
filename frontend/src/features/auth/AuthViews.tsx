@@ -123,6 +123,7 @@ export const AuthViews: React.FC = () => {
             onChange={(e) => setUsername(e.target.value)}
             placeholder="e.g. sarah_dev"
             required
+            autoComplete="username"
           />
 
           {!isLogin && (
@@ -134,6 +135,7 @@ export const AuthViews: React.FC = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="e.g. sarah@aerospace.io"
+                autoComplete="email"
               />
               <div style={{ display: 'flex', gap: '12px' }}>
                 <Input
@@ -143,6 +145,7 @@ export const AuthViews: React.FC = () => {
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
                   placeholder="Sarah"
+                  autoComplete="given-name"
                 />
                 <Input
                   label="Last Name"
@@ -151,6 +154,7 @@ export const AuthViews: React.FC = () => {
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
                   placeholder="Connor"
+                  autoComplete="family-name"
                 />
               </div>
             </>
@@ -164,6 +168,7 @@ export const AuthViews: React.FC = () => {
             onChange={(e) => setPassword(e.target.value)}
             placeholder="••••••••"
             required
+            autoComplete={isLogin ? "current-password" : "new-password"}
           />
 
           <Button
