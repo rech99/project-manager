@@ -6,6 +6,7 @@ import Button from '../../components/Button';
 import Modal from '../../components/Modal';
 import Input from '../../components/Input';
 import api from '../../services/api';
+import NotificationBell from '../../components/NotificationBell';
 
 export const ProjectSidebar: React.FC = () => {
   const { projects, activeProject, fetchProjects, selectProject, isLoading } = useBoardStore();
@@ -225,14 +226,17 @@ export const ProjectSidebar: React.FC = () => {
               </span>
             </div>
 
-            <button 
-              onClick={logout}
-              className="btn-text" 
-              style={{ padding: '8px', borderRadius: '50%', color: 'var(--danger)' }}
-              title="Sign Out"
-            >
-              <LogOut size={16} />
-            </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
+              <NotificationBell />
+              <button 
+                onClick={logout}
+                className="btn-text" 
+                style={{ padding: '8px', borderRadius: '50%', color: 'var(--danger)' }}
+                title="Sign Out"
+              >
+                <LogOut size={16} />
+              </button>
+            </div>
           </div>
         )}
       </div>

@@ -22,6 +22,19 @@ function App() {
     initializeAuth();
   }, []);
 
+  // Listen to open_task_details events from notification clicks
+  useEffect(() => {
+    const handleOpenTask = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      if (customEvent.detail && customEvent.detail.taskId) {
+        setSelectedTaskId(customEvent.detail.taskId);
+        setIsTaskDetailsOpen(true);
+      }
+    };
+    window.addEventListener('open_task_details', handleOpenTask);
+    return () => window.removeEventListener('open_task_details', handleOpenTask);
+  }, []);
+
   // Reset charts view when active project changes
   useEffect(() => {
     setShowCharts(false);

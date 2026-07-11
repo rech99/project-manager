@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import { WS_BASE_URL } from '../services/api';
 import { useBoardStore } from './boardStore';
+import { useNotificationStore } from './notificationStore';
+import { useAuthStore } from './authStore';
 
 export interface Collaborator {
   id: string;
@@ -88,6 +90,20 @@ export const useWebSocketStore = create<WebSocketState>((set, get) => ({
 
             return { collaborators: updatedCollaborators };
           });
+        } else if (wsEvent === 'NOTIFICATION_CREATED') {
+          const currentUserId = useAuthStore.getState().user?.id;
+          if (payload && payload.recipient_id === currentUserId) {
+            useNotificationStore.getState().addNotification({
+              id: payload.id,
+              recipient_id: payload.recipient_id,
+              actor_name: payload.actor_name,
+              verb: payload.verb,
+              task_id: payload.task_id,
+              task_key: payload.task_key,
+              task_title: payload.task_title,
+              created_at: payload.created_at
+            });
+          }
         }
       } catch (err) {
         console.error('Failed to parse WebSocket message:', err);
